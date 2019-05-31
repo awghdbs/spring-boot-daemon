@@ -1,0 +1,120 @@
+# Spring Boot Daemon
+
+Manage a Spring Boot application as a Windows Service
+
+## Building
+
+You need Gradle to build the project and a simple `.\gradlew.bat winswPackage` at the root will do.
+
+## Unix
+
+There is no need for Spring Boot Daemon on Unix thanks to the native Spring Boot support from 1.3 onwards.
+
+## Windows
+
+The `windows` distribution uses https://github.com/kohsuke/winsw[`winsw`].
+
+WARNING: You need to install the `.NET` framework on the target machine first.
+
+## Installing and Running Services
+
+To install the application as a service, extract the distribution zip somewhere and open a shell with administrative rights in that directory.
+
+### Install Service
+[source,cmd]
+----
+install.bat
+----
+
+Once the service has been installed, you can start it the usual way, that is:
+
+### Start Service
+
+[source,cmd]
+----
+startup.bat
+----
+
+### Stop Service
+
+[source,cmd]
+----
+shutdown.bat
+----
+
+### Run Application from Command line
+
+[source,cmd]
+----
+run.bat
+----
+
+### View Service Status
+
+[source,cmd]
+----
+status.bat
+----
+
+Note: A result of `NonExistent` means the service is not installed.
+
+### Uninstall Service
+
+[source,cmd]
+----
+shutdown.bat
+uninstall.bat
+----
+
+## Logs
+
+The logs are available in the `logs` directory of the distribution.
+
+## Usage in your application
+
+Or, **How to convert your application into a Windows Service**.
+
+To enable running your own Spring Boot applications as a Windows Service:
+
+- add `io.github.awghdbs:spring-boot-daemon-integration` as a dependency
+- copy, unaltered, the `dist` directory from `spring-boot-daemon-sample/src/main` into your own application sources
+- add the following properties and repositories to your `build.gradle`, updating the values to suit:
++
+[source,gradle]
+----
+ext {
+    winswVersion = '2.2.0'
+    
+    bootJarName = "${project.name}-${project.version}.jar"
+
+    distServiceName = "${project.name}"
+	distServiceDisplayName = 'Sample Spring Boot App' <2>
+	distServiceDescription = 'Demonstrate how to integrate a Spring Boot app as a Windows Service' <3>
+	distJar = "lib\\${bootJarName}"
+	distStartClass = 'net.nicoll.SampleApplication' <1>
+	distJmxPort = '50201' <4>
+}
+
+repositories {
+    maven{
+        url 'http://repo.jenkins-ci.org/releases/'
+    }
+}
+
+configurations {
+    winsw { transitive = false }
+}
+
+dependencies {
+    implementation project(':spring-boot-daemon-integration')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // WinSW
+	winsw "com.sun.winsw:winsw:${winswVersion}:bin@exe"
+}
+----
+<1> Your Spring Boot application class
+<2> The name that shows in the Windows Services Control Panel
+<3> The longer description that shows in the Windows Services Control Panel
+<4> The JMX Port on the machine that will be assigned to the server, must not conflict with another usage and is required to be able to shutdown the service
+- change bootJar task to use `PropertiesLauncher`, and add `winswPackage` task to your `build.gradle`

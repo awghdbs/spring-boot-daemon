@@ -1,4 +1,4 @@
 @echo off
 
-@dist.service.name@.exe status
+${distServiceName}.exe status
 pause

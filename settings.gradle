@@ -1,0 +1,8 @@
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+	}
+}
+rootProject.name = 'spring-boot-daemon'
+include(':spring-boot-daemon-integration')
+include(':spring-boot-daemon-sample')

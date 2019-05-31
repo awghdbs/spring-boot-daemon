@@ -1,3 +1,3 @@
 @echo off
 
-net stop @dist.service.name@
+net stop ${distServiceName}

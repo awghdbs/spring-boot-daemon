@@ -1,0 +1,82 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.4.RELEASE'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+ext {
+    winswVersion = '2.2.0'
+    
+    bootJarName = "${project.name}-${project.version}.jar"
+
+    distServiceName = "${project.name}"
+	distServiceDisplayName = 'Sample Spring Boot App'
+	distServiceDescription = 'Demonstrate how to integrate a Spring Boot app as a Windows Service'
+	distJar = "lib\\${bootJarName}"
+	distStartClass = 'net.nicoll.SampleApplication'
+	distJmxPort = '50201'
+}
+
+repositories {
+    maven{
+        url 'http://repo.jenkins-ci.org/releases/'
+    }
+}
+
+configurations {
+    winsw { transitive = false }
+}
+
+dependencies {
+    implementation project(':spring-boot-daemon-integration')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // WinSW
+	winsw "com.sun.winsw:winsw:${winswVersion}:bin@exe"
+}
+
+description = 'Spring Boot Daemon :: Sample'
+
+bootJar {
+    manifest {
+        attributes 'Main-Class': 'org.springframework.boot.loader.PropertiesLauncher'
+    }
+}
+
+task winswPackage(type: Zip, dependsOn: 'bootJar') {
+    group 'distribution'
+	description 'Package application as a Windows service'
+	
+	archiveClassifier = 'windows'
+	
+	from("${project.buildDir}/${project.libsDirName}/") {
+	    include "${bootJarName}"
+		into 'lib'
+	}
+	from configurations.winsw {
+	    rename "winsw-${winswVersion}-bin.exe", "${project.name}.exe"
+	}
+	
+    from('src/main/dist/') {
+	    exclude 'service.exe.config'
+	    expand project.properties
+		rename 'service.xml', "${project.name}.xml"
+	}
+	from('src/main/dist/service.exe.config') {
+	    rename 'service.exe.config', "${project.name}.exe.config"
+	}
+	includeEmptyDirs true
+	def winswPackageTempDir = "${project.buildDir}/winsw-package-temp/"
+	from("$winswPackageTempDir") {
+	    include 'logs'
+	}
+	
+	doFirst {
+	    mkdir "$winswPackageTempDir/logs/"
+	}
+}
+
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}

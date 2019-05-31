@@ -1,0 +1,24 @@
+allprojects {
+    group = 'io.github.awghdbs'
+    version = '0.0.1-SNAPSHOT'   
+}
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
+    
+    ext {
+        springBootVersion = '2.1.4.RELEASE'
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+description = 'Spring Boot Daemon'
